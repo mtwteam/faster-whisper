@@ -1186,6 +1186,16 @@ class WhisperModel:
 
             previous_tokens = all_tokens[prompt_reset_since:]
 
+            # Reuse initial prompt after prompt reset.
+            # Inspired by https://github.com/openai/whisper/pull/220
+            if options.condition_on_previous_text and len(previous_tokens) == 0 and options.initial_prompt is not None:
+                self.logger.debug("Empty prompt detected, reusing initial prompt")
+                if isinstance(options.initial_prompt, str):
+                    initial_prompt = " " + options.initial_prompt.strip()
+                    previous_tokens = tokenizer.encode(initial_prompt)
+                else:
+                    previous_tokens = options.initial_prompt
+
             if seek > 0 or encoder_output is None:
                 encoder_output = self.encode(segment)
 
